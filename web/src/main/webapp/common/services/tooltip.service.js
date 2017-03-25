@@ -37,6 +37,14 @@
 			"position": "top",
 			"trigger": "click"
 		},
+		"activeThread": {
+			"position": "top",
+			"trigger": "click"
+		},
+		"dataSource": {
+			"position": "top",
+			"trigger": "click"
+		},
 		"responseSummaryChart": {
 			"position": "top",
 			"trigger": "click"
@@ -89,6 +97,10 @@
 					return function() { return helpContentTemplate(helpContentService.inspector.cpuUsage); };
 				case "tps":
 					return function() { return helpContentTemplate(helpContentService.inspector.tps); };
+				case "activeThread":
+					return function() { return helpContentTemplate(helpContentService.inspector.activeThread); };
+				case "dataSource":
+					return function() { return helpContentTemplate(helpContentService.inspector.dataSource); };
 				case "responseSummaryChart":
 					return function() { return helpContentTemplate(helpContentService.nodeInfoDetails.responseSummary); };
 				case "loadChart":

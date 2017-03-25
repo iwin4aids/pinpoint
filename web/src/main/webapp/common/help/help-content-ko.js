@@ -529,7 +529,7 @@
 						name: "Used",
 						desc: "현재 사용 중인 heap 사이즈"
 					},{
-						name: "FCG",
+						name: "FGC",
 						desc: "Full garbage collection의 총 소요 시간(2번 이상 발생 시, 괄호 안에 발생 횟수 표시)"
 					}]
 				}]
@@ -547,7 +547,7 @@
 						name: "Used",
 						desc: "현재 사용 중인 heap 사이즈"
 					},{
-						name: "FCG",
+						name: "FGC",
 						desc: "Full garbage collection의 총 소요 시간(2번 이상 발생 시, 괄호 안에 발생 횟수 표시)"
 					}]
 				}]
@@ -591,6 +591,48 @@
                     }]
                 }]
             },
+			activeThread: {
+				mainStyle: "",
+				title: "Active Thread",
+				desc: "사용자 request를 처리하는 agent의 active thread 현황을 보여줍니다.",
+				category: [{
+					title: "[범례]",
+					items: [{
+						name: "Fast (1s)",
+						desc: "현재 소요시간이 1초 이하인 thread 갯수"
+					},{
+						name: "Normal (3s)",
+						desc: "현재 소요시간이 1초 초과, 3초 이하인 thread 갯수"
+					},{
+						name: "Slow (5s)",
+						desc: "현재 소요시간이 3초 초과, 5초 이하인 thread 갯수"
+					},{
+						name: "Very Slow (slow)",
+						desc: "현재 소요시간이 5초를 넘고 있는 thread 갯수"
+					}]
+				}]
+			},
+			dataSource: {
+				mainStyle: "",
+				title: "Data Source",
+				desc: "에이전트의 DataSource 현황을 보여줍니다.",
+				category: [{
+					title: "[범례]",
+					items: [{
+						name: "Active Avg",
+						desc: "사용한 Connection의 평균 갯수"
+					},{
+						name: "Active Max",
+						desc: "사용한 Connection의 최대 갯수"
+					},{
+						name: "Total Max",
+						desc: "사용이 가능한 Connection의 최대 갯수"
+					},{
+						name: "Type",
+						desc: "DB Connection Pool 종류"
+					}]
+				}]
+			},
 			wrongApp: [
 				"<div style='font-size:12px'>해당 agent는 {{application1}}이 아닌 {{application2}}에 포함되어 있습니다.<br>",
 				"원인은 다음 중 하나입니다.<hr>",

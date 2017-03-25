@@ -3,21 +3,23 @@ package com.navercorp.pinpoint.collector.cluster.zookeeper;
 import com.navercorp.pinpoint.collector.TestAwaitTaskUtils;
 import com.navercorp.pinpoint.collector.TestAwaitUtils;
 import com.navercorp.pinpoint.collector.cluster.zookeeper.exception.PinpointZookeeperException;
-import com.navercorp.pinpoint.collector.receiver.tcp.AgentHandshakePropertyType;
+import com.navercorp.pinpoint.rpc.packet.HandshakePropertyType;
 import com.navercorp.pinpoint.rpc.server.PinpointServer;
 import org.junit.Assert;
 import org.junit.Test;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @Author Taejin Koo
@@ -34,7 +36,7 @@ public class ZookeeperJobWorkerTest {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final TestAwaitUtils awaitUtils = new TestAwaitUtils(10, 100);
+    private final TestAwaitUtils awaitUtils = new TestAwaitUtils(10, 1000);
 
     @Test
     public void test1() throws Exception {
@@ -42,6 +44,8 @@ public class ZookeeperJobWorkerTest {
         zookeeperClient.connect();
 
         ZookeeperJobWorker zookeeperWorker = new ZookeeperJobWorker(zookeeperClient, IDENTIFIER);
+        zookeeperWorker.start();
+        // To check for handling when multiple started. (goal: nothing happen)
         zookeeperWorker.start();
 
         try {
@@ -52,6 +56,7 @@ public class ZookeeperJobWorkerTest {
             }
 
             waitZookeeperServerData(random, zookeeperClient);
+            Assert.assertEquals(random, decodeServerData(zookeeperWorker.getClusterData()).size());
         } finally {
             zookeeperWorker.stop();
         }
@@ -70,9 +75,11 @@ public class ZookeeperJobWorkerTest {
             zookeeperWorker.addPinpointServer(mockServer);
             zookeeperWorker.addPinpointServer(mockServer);
             waitZookeeperServerData(1, zookeeperClient);
+            Assert.assertEquals(1, decodeServerData(zookeeperWorker.getClusterData()).size());
 
             zookeeperWorker.removePinpointServer(mockServer);
             waitZookeeperServerData(0, zookeeperClient);
+            Assert.assertEquals(0, decodeServerData(zookeeperWorker.getClusterData()).size());
         } finally {
             zookeeperWorker.stop();
         }
@@ -90,12 +97,15 @@ public class ZookeeperJobWorkerTest {
             PinpointServer mockServer = createMockPinpointServer("app", "agent", System.currentTimeMillis());
             zookeeperWorker.addPinpointServer(mockServer);
             waitZookeeperServerData(1, zookeeperClient);
+            Assert.assertEquals(1, decodeServerData(zookeeperWorker.getClusterData()).size());
 
             zookeeperWorker.clear();
             waitZookeeperServerData(0, zookeeperClient);
+            Assert.assertEquals(0, decodeServerData(zookeeperWorker.getClusterData()).size());
 
             zookeeperWorker.addPinpointServer(mockServer);
             waitZookeeperServerData(1, zookeeperClient);
+            Assert.assertEquals(1, decodeServerData(zookeeperWorker.getClusterData()).size());
         } finally {
             zookeeperWorker.stop();
         }
@@ -117,9 +127,11 @@ public class ZookeeperJobWorkerTest {
             zookeeperWorker.addPinpointServer(mockServer2);
 
             waitZookeeperServerData(2, zookeeperClient);
+            Assert.assertEquals(2, decodeServerData(zookeeperWorker.getClusterData()).size());
 
             zookeeperWorker.removePinpointServer(mockServer1);
             waitZookeeperServerData(1, zookeeperClient);
+            Assert.assertEquals(1, decodeServerData(zookeeperWorker.getClusterData()).size());
         } finally {
             zookeeperWorker.stop();
         }
@@ -127,9 +139,9 @@ public class ZookeeperJobWorkerTest {
 
     private PinpointServer createMockPinpointServer(String applicationName, String agentId, long startTimeStamp) {
         Map<Object, Object> properties = new HashMap<>();
-        properties.put(AgentHandshakePropertyType.APPLICATION_NAME.getName(), applicationName);
-        properties.put(AgentHandshakePropertyType.AGENT_ID.getName(), agentId);
-        properties.put(AgentHandshakePropertyType.START_TIMESTAMP.getName(), startTimeStamp);
+        properties.put(HandshakePropertyType.APPLICATION_NAME.getName(), applicationName);
+        properties.put(HandshakePropertyType.AGENT_ID.getName(), agentId);
+        properties.put(HandshakePropertyType.START_TIMESTAMP.getName(), startTimeStamp);
 
         PinpointServer mockServer = mock(PinpointServer.class);
         when(mockServer.getChannelProperties()).thenReturn(properties);
@@ -138,9 +150,17 @@ public class ZookeeperJobWorkerTest {
     }
 
     private List<String> getServerData(ZookeeperClient zookeeperClient) throws PinpointZookeeperException, InterruptedException {
+        return decodeServerData(zookeeperClient.getData(PATH));
+    }
+
+    private List<String> decodeServerData(byte[] serverData) throws PinpointZookeeperException, InterruptedException {
+        if (serverData == null) {
+            return Collections.emptyList();
+        }
+
         List<String> servers = new ArrayList<>();
 
-        String[] allData = new String(zookeeperClient.getData(PATH)).split("\r\n");
+        String[] allData = new String(serverData).split("\r\n");
         for (String data : allData) {
             if (!EMPTY_STRING.equals(data.trim())) {
                 servers.add(data);

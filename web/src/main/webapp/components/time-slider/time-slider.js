@@ -24,7 +24,7 @@
             "headerZoneHeight": 20,       // 상단 시간 표시영역의 height
             "stateLineThickness": 4,       // 상태선의 두께
             "minSliderTimeSeries": 6000,             // 6sec
-            "maxSelectionTimeSeries": 172800000,	// 2day
+			"maxSelectionTimeSeries": TimeSlider.MAX_TIME_RANGE,	// 7day
             "headerTextTopPadding": 10,   // 상단 상태선과 시간 text의 간격
             "selectionPointRadius": 4
         };
@@ -168,7 +168,7 @@
     };
     TimeSlider.prototype.addEventData = function( aNewData ) {
         this.oLoading.show();
-        var aBoundary = this.oEventData.addData( aNewData );
+        this.oEventData.addData( aNewData );
         this.oEvents.changeData();
         this.oStateLine.changeData();
         this.oLoading.hide();
@@ -202,6 +202,7 @@
 		this.oPositionManager.setSelectionStartTime( aSelectionFromTo[0] );
 		this.oPositionManager.setSelectionEndTime( aSelectionFromTo[1] );
 		this.oPositionManager.setSelectTime( aSelectionFromTo[1] );
+		this.emptyData();
 		this.reset();
 	};
 	TimeSlider.prototype.movePrev = function() {
@@ -256,15 +257,23 @@
     };
     TimeSlider.EventColor = {
         "base": "rgba(187, 187, 187, .3)",
-        "10100": "rgba(0, 158, 0, .4 )",	//"#009E00",         //Agent connected
-        "10199": "rgba(250, 235, 215, .7)",	//"#FAEBD7",         //Agent ping
-        "10200": "rgba(209, 82, 96, .7)",	//"#D15260",         //Agent shutdown
-        "10201": "rgba(233, 92, 99, .7)",	//"#E95C63",         //Agent unexpected shutdown
-        "10300": "rgba(255, 157, 123, .7)", //"#FF9D7B",         //Agent connection closed by server
-        "10301": "rgba(242, 240, 137, .7)",	//"#F2F089",         //Agent connection unexpectedly closed by server
+        "10100": "rgba(0, 158, 0, .4 )",	//"#009E00",         //Agent connected <-> shutdown
+        "10199": "rgba(250, 235, 215, .7)",	//"#FAEBD7",         //Agent ping ---
+        "10200": "rgba(209, 82, 96, .7)",	//"#D15260",         //Agent shutdown <-> connect
+        "10201": "rgba(233, 92, 99, .7)",	//"#E95C63",         //Agent unexpected shutdown <-> connect
+        "10300": "rgba(255, 157, 123, .7)", //"#FF9D7B",         //Agent connection closed by server <-> connect
+        "10301": "rgba(242, 240, 137, .7)",	//"#F2F089",         //Agent connection unexpectedly closed by server <-> connect
         "20100": "rgba(0, 0, 255, .5)"		//"#00F"             //thread dump
     };
+	TimeSlider.EmptyEventColor = {
+		"10100": TimeSlider.EventColor["10200"],
+		"10200": TimeSlider.EventColor["10100"],
+		"10201": TimeSlider.EventColor["10100"],
+		"10300": TimeSlider.EventColor["10100"],
+		"10301": TimeSlider.EventColor["10100"]
+	};
 	TimeSlider.GREEN = "10100";
 	TimeSlider.RED = "10200";
+	TimeSlider.MAX_TIME_RANGE = 604800000;
     w.TimeSlider = TimeSlider;
 })(window, jQuery);
